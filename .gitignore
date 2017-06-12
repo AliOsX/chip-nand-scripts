@@ -1,0 +1,4 @@
+*.bin
+*.ubi
+*.ubifs
+*.sparse
