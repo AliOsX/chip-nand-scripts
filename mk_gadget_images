@@ -60,8 +60,7 @@ echo "## creating ubi image"
 echo "${SCRIPTDIR}/mk_ubi_image" -N "${NAND_CONFIG}" -c ${UBINIZE_CONFIG} -d "${OUTPUT_DIR}" "${OUTPUT_DIR}"/rootfs.ubifs
 "${SCRIPTDIR}/mk_ubi_image" -N "${NAND_CONFIG}" -c "${UBINIZE_CONFIG}" -d "${OUTPUT_DIR}" "${OUTPUT_DIR}"/rootfs.ubifs
 
-#ln -sf "$OUTPUT_DIR/spl-$NAND_EBSIZE-$NAND_PSIZE-${NAND_OSIZE}.bin" "$OUTPUT_DIR/flash-spl.bin"
-#ln -sf "$OUTPUT_DIR/uboot-${NAND_EBSIZE}.bin" "$OUTPUT_DIR/flash-uboot.bin"
-#ln -sf "$OUTPUT_DIR/uboot-env-$(printf %x $ubootenv_size).bin" "$OUTPUT_DIR/flash-uboot-env.bin"
-#ln -sf "$OUTPUT_DIR/chip-$NAND_EBSIZE-${NAND_PSIZE}.ubi.sparse" "$OUTPUT_DIR/flash-rootfs.bin"
+ln -sf "$OUTPUT_DIR/spl-$NAND_EBSIZE-$NAND_PSIZE-${NAND_OSIZE}.bin" "$OUTPUT_DIR/flash-spl.bin"
+ln -sf "$OUTPUT_DIR/uboot-${NAND_EBSIZE}.bin" "$OUTPUT_DIR/flash-uboot.bin"
+ln -sf "$OUTPUT_DIR/chip-$NAND_EBSIZE-${NAND_PSIZE}.ubi.sparse" "$OUTPUT_DIR/flash-rootfs.bin"
 
