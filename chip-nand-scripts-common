@@ -103,6 +103,10 @@ filesize() {
 read_nand_config() {
   local CONFIGFILE=$1
 
+  if [[ -z "$SCRIPTDIR" ]]; then
+      local SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  fi
+
   if [[ ! -f "${CONFIGFILE}" ]]; then
     CONFIGFILE="$SCRIPTDIR/$1"
   fi

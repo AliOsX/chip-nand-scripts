@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source $SCRIPTDIR/common.sh
+source $SCRIPTDIR/chip_nand_scripts_common
 
 require sunxi-nand-image-builder "Please install from http://github.com/linux-sunxi/sunxi-tools."
 
