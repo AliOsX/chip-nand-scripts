@@ -14,6 +14,7 @@ prepare_ubifs() {
   local eraseblocksize="$5"
   local pagesize="$6"
   local subpagesize="$7"
+  local compression="${8:-lzo}"
   local tmpdir=`mktemp -d -t chip-ubi-XXXXXX`
   local rootfs=$tmpdir/rootfs
 
@@ -32,8 +33,8 @@ prepare_ubifs() {
   fakeroot /bin/bash <<EOF
 mkdir -p $rootfs
 tar -xf $rootfstar -C $rootfs
-echo mkfs.ubifs -d $rootfs -m $pagesize -e $lebsize -c $maxlebcount -o $outputfile
-mkfs.ubifs -d $rootfs -m $pagesize -e $lebsize -c $maxlebcount -o $outputfile ||exit 1
+echo mkfs.ubifs -d $rootfs -m $pagesize -e $lebsize -c $maxlebcount -o $outputfile -x $compression
+mkfs.ubifs -d $rootfs -m $pagesize -e $lebsize -c $maxlebcount -o $outputfile -x $compression ||exit 1
 EOF
 
   rm -rf $tmpdir
@@ -54,7 +55,7 @@ usage() {
 }
 
 
-while getopts ":N:d:o:" o; do
+while getopts ":N:d:o:c:" o; do
     case "${o}" in
         N)
 	    read_nand_config "${OPTARG}"
@@ -65,6 +66,9 @@ while getopts ":N:d:o:" o; do
         d)
             outputdir=${OPTARG}
             ;;
+        c)
+            COMPRESSION=${OPTARG}
+            ;;
         *)
             usage
             ;;
@@ -72,9 +76,10 @@ while getopts ":N:d:o:" o; do
 done
 shift $((OPTIND-1))
 
+COMPRESSION=${COMPRESSION:-lzo}
 outputdir=${outputdir:-.}
 outputfile=${outputfile:-$outputdir/rootfs-$NAND_TYPE-$NAND_MAXLEB_COUNT-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.ubifs}
 inputfile=$1
 
-echo prepare_ubifs $outputfile $inputfile $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE
-prepare_ubifs $outputfile $inputfile $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE
+echo prepare_ubifs $outputfile $inputfile $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE $COMPRESSION
+prepare_ubifs $outputfile $inputfile $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE $COMPRESSION
