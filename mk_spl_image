@@ -50,6 +50,8 @@ usage() {
 \n
   options:\n\
     -N FILENAME		- read nand configuration from FILENAME\n\
+    -d OUTPUTDIR    - write to output directory (default: current directory)\n\
+    -o OUTPUTFILE   - write to output file (if no absolute path is given, it will go to OUTPUTDIR)\n\
     -h, --help          - show this help\n\
 \n"
   exit 1
@@ -59,13 +61,13 @@ usage() {
 while getopts ":N:d:o:" o; do
     case "${o}" in
         N)
-	    read_nand_config "${OPTARG}"
+            nand_config="${OPTARG}"
             ;;
         o)
-            outputfile=${OPTARG}
+            outputfile="${OPTARG}"
             ;;
         d)
-            outputdir=${OPTARG}
+            outputdir="${OPTARG}"
             ;;
         *)
             usage
@@ -74,9 +76,15 @@ while getopts ":N:d:o:" o; do
 done
 shift $((OPTIND-1))
 
-outputdir=${outputdir:-.}
+[[ -z "${nand_config}" ]] && echo "ERROR: no nand configuration specified" && usage && exit
+read_nand_config "${nand_config}"
+
+outputdir=${outputdir:-$PWD}
 outputfile=${outputfile:-$outputdir/spl-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.bin}
-spl=$1
-  
-echo prepare_spl $outputfile $spl $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_OOB_SIZE
-prepare_spl $outputfile $spl $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_OOB_SIZE
+input_file=$1
+
+[[ -z "${input_file}" ]] && echo "ERROR: no input file specified" && usage && exit
+ 
+ 
+echo prepare_spl $outputfile $input_file $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_OOB_SIZE
+prepare_spl $outputfile $input_file $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_OOB_SIZE
