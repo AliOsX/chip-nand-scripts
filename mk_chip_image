@@ -13,7 +13,7 @@ function usage() {
   echo -e "\n\
 usage: $(basename $0) <nand-type> <image-type> <input-file> [output-file]\n\
 \n\
-  <nand-type> can be: hynix, toshiba-mlc, toshiba-slc\n\
+  <nand-type> can be: hynix-mlc, toshiba-mlc, toshiba-slc\n\
   <image-type> can be: spl, u-boot, u-boot-env, ubifs, ubi\n\
 \n\
 options:\n\
@@ -103,15 +103,34 @@ mkfs.ubifs -d $rootfs -m $pagesize -e $lebsize -c $maxlebcount -o $outputfile -x
 EOF
 }
 
+function create_default_ubinize_cfg() {
+    local ubifs="$1"
+    local ubinize_cfg="$2"
+
+    echo -n "Create default ubinize.cfg including MLC fixed nand size work around in $ubinize_cfg..."
+
+    echo "\
+[rootfs]
+mode=ubi
+vol_id=0
+${NAND_UBI_VOLSPEC}
+vol_type=dynamic
+vol_name=rootfs
+vol_alignment=1
+image=${ubifs}\
+" > "${ubinize_cfg}"
+    echo OK
+    cat "$ubinize_cfg"
+}
+
 function prepare_ubi() {
-  local ubifs="$1"
+  local ubicfg="$1"
   local ubi="$2"
-  local ubicfg="$3"
-  local nandtype="$4"
-  local maxlebcount="$5"
-  local eraseblocksize="$6"
-  local pagesize="$7"
-  local subpagesize="$8"
+  local nandtype="$3"
+  local maxlebcount="$4"
+  local eraseblocksize="$5"
+  local pagesize="$6"
+  local subpagesize="$7"
 
   local sparseubi="${ubi}.sparse"
   local mlcopts=""
@@ -128,8 +147,6 @@ function prepare_ubi() {
   else
     lebsize=$((eraseblocksize-pagesize*2))
   fi
-
-  echo "WARNING: not applying MLC fixed nand size work around..."
 
   echo ubinize -o $ubi -p $eraseblocksize -m $pagesize -s $subpagesize $mlcopts $ubicfg
   ubinize -o $ubi -p $eraseblocksize -m $pagesize -s $subpagesize $mlcopts $ubicfg
@@ -166,10 +183,25 @@ nand_config=${1}
  ouput_file=${4}
 
 [[ -z "${nand_config}" ]] && echo "ERROR: no nand configuration specified" && usage
-read_nand_config "${nand_config}"
+case "${nand_config}" in
+    hynix-mlc)
+        read_nand_config "Hynix-MLC.config"
+        ;;
+    toshiba-mlc)
+        read_nand_config "Toshiba-MLC.config"
+        ;;
+    toshiba-slc)
+        read_nand_config "Toshiba-SLC-4G-TC58NVG2S0H.config"
+        ;;
+    *)
+        echo "ERROR: invalid nand-type '${nand_type}'" && usage
+        ;;
+esac
+
+
 [[ -z "${image_type}" ]] && echo "ERROR: no image type specified" && usage
 [[ -z "${input_file}" ]] && echo "ERROR: no input file specified" && usage
-[[ ! -f "${input_file}" ]] && echo "ERROR: input file '${input_file}' doesn not exist" && usage
+[[ ! -f "${input_file}" ]] && echo "ERROR: input file '${input_file}' doesn't not exist" && usage
 output_dir="${output_dir:-$PWD}"
 [[ ! -d "${output_dir}" ]] && echo "ERROR: invalid output directory '${output_dir}'" && usage
   
@@ -178,7 +210,7 @@ export tmp_dir=`mktemp -d -t mk_chip_image_XXXXXX`
 
 case "${image_type}" in
     spl)
-        output_file="${output_file:-$output_dir/spl-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.bin}"
+        output_file="${output_file:-$output_dir/spl-$nand_config-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.bin}"
         prepare_spl "${input_file}" "${output_file}" $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_OOB_SIZE
         ;;
     u-boot)
@@ -194,13 +226,13 @@ case "${image_type}" in
         ;;
     ubifs)
         COMPRESSION=${COMPRESSION:-lzo}
-        output_file="${output_file:-$output_dir/rootfs-$NAND_TYPE-$NAND_MAXLEB_COUNT-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.ubifs}"
+        output_file="${output_file:-$output_dir/rootfs-${nand_config}-$NAND_MAXLEB_COUNT-$NAND_EBSIZE-$NAND_PSIZE-$NAND_OSIZE.ubifs}"
         prepare_ubifs "${input_file}" "${output_file}" $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE $COMPRESSION
         ;;
     ubi)
-        ubinize_cfg="${ubinize_cfg:?ERROR: no ubinize configuration specified}"
-        output_file="${output_file:-$output_dir/chip-$NAND_EBSIZE-$NAND_PSIZE.ubi}"
-        prepare_ubi "${input_file}" "${output_file}" "${ubinize_cfg}" $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE
+        [[ -z "${ubinize_cfg}" ]] && export ubinize_cfg="${tmp_dir}/ubinize.cfg" && create_default_ubinize_cfg ${input_file} "$ubinize_cfg"
+        output_file="${output_file:-$output_dir/chip-${nand_config}-$NAND_EBSIZE-$NAND_PSIZE.ubi}"
+        prepare_ubi "${ubinize_cfg}" "${output_file}" $NAND_TYPE $NAND_MAXLEB_COUNT $NAND_ERASE_BLOCK_SIZE $NAND_PAGE_SIZE $NAND_SUBPAGE_SIZE
         ;;
     *)
         echo "ERROR: invalid image-type '${image_type}'" && usage
