@@ -156,7 +156,7 @@ function prepare_ubi() {
 
 
 ## parse command line options
-while getopts ":d:o:" o; do
+while getopts ":o:e:c:" o; do
     case "${o}" in
         o)
             output_dir="${OPTARG}"
