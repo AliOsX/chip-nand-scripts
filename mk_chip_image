@@ -180,7 +180,7 @@ shift $((OPTIND-1))
 nand_config=${1}
  image_type=${2}
  input_file=${3}
- ouput_file=${4}
+output_file=${4}
 
 [[ -z "${nand_config}" ]] && echo "ERROR: no nand configuration specified" && usage
 case "${nand_config}" in
@@ -197,7 +197,6 @@ case "${nand_config}" in
         echo "ERROR: invalid nand-type '${nand_type}'" && usage
         ;;
 esac
-
 
 [[ -z "${image_type}" ]] && echo "ERROR: no image type specified" && usage
 [[ -z "${input_file}" ]] && echo "ERROR: no input file specified" && usage
