@@ -13,7 +13,6 @@ before_script:
   - echo "CI_REGISTRY=$CI_REGISTRY"
   - echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE"
   - echo "CONTAINER_IMAGE=$CONTAINER_IMAGE"
-  - echo "CI_PROJECT_URL=$CI_PROJECT_URL"
 
 build:
   stage: build
