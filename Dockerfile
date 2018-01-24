@@ -38,3 +38,6 @@ ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j8 && \
 cd .. && \
 \
 echo DONE!
+ADD chip_nand_scripts_common /usr/bin/chip_nand_scripts_common
+ADD mk_chip_image /usr/bin/mk_chip_image
+ADD nand_configs /usr/bin/nand_configs
